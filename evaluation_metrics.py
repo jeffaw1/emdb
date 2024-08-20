@@ -323,6 +323,7 @@ def compute_metrics(
     gender_gt,
     gender_hat,
     camera_pose_gt=None,
+    visibility_mask=None,
 ):
     """
     Computes all the metrics we want to report.
@@ -364,6 +365,13 @@ def compute_metrics(
     mats_procs_exp = np.expand_dims(pos_errors["mat_procs"], 1)
     mats_procs_exp = np.tile(mats_procs_exp, (1, len(SMPL_OR_JOINTS), 1, 1))
     mats_pred_prc = np.matmul(mats_procs_exp, pred_mats)
+
+    # Apply visibility mask if provided
+    if visibility_mask is not None:
+        pred_mats = pred_mats[visibility_mask]
+        gt_mats = gt_mats[visibility_mask]
+        pred_joints = pred_joints[visibility_mask]
+        gt_joints = gt_joints[visibility_mask]
 
     # Compute differences between the predicted matrices after procrustes and GT matrices.
     mpjae_pa_final, all_angles_pa = joint_angle_error(mats_pred_prc, gt_mats)

@@ -11,6 +11,7 @@ import numpy as np
 from tabulate import tabulate
 
 from evaluation_loaders import load_hybrik
+from utils import crop_and_check_visibility
 
 HYBRIK = "HybrIK"
 
@@ -82,6 +83,11 @@ class EvaluationEngine(object):
             # This will select whatever gender the ground-truth specifies.
             return None
 
+    def crop_and_filter_data(self, poses, betas, trans, camera_params):
+        """Crop the data and filter out invisible keypoints."""
+        visible_mask = crop_and_check_visibility(poses, camera_params)
+        return poses[visible_mask], betas[visible_mask], trans[visible_mask], visible_mask
+
     def compare2method(self, poses_gt, betas_gt, trans_gt, sequence_root, result_root, method):
         """Load this method's results and compute the metrics on them."""
 
@@ -96,23 +102,29 @@ class EvaluationEngine(object):
         # Load camera parameters.
         data = self._get_emdb_data(sequence_root)
         world2cam = data["camera"]["extrinsics"]
+        camera_params = data["camera"]
 
         gender_gt = data["gender"]
         gender_hat = self.get_gender_for_baseline(method)
 
+        # Crop and filter the data
+        poses_gt_filtered, betas_gt_filtered, trans_gt_filtered, visible_mask = self.crop_and_filter_data(poses_gt, betas_gt, trans_gt, camera_params)
+        poses_cmp_filtered, betas_cmp_filtered, trans_cmp_filtered, _ = self.crop_and_filter_data(poses_cmp, betas_cmp, trans_cmp, camera_params)
+
         # For some frames there is too much occlusion, we ignore these.
         good_frames_mask = self.load_good_frames_mask(sequence_root)
+        combined_mask = np.logical_and(good_frames_mask, visible_mask)
 
         metrics, metrics_extra = self.compute_metrics(
-            poses_gt[good_frames_mask],
-            betas_gt[good_frames_mask],
-            trans_gt[good_frames_mask],
-            poses_cmp[good_frames_mask],
-            betas_cmp[good_frames_mask],
-            trans_cmp[good_frames_mask],
+            poses_gt_filtered[combined_mask],
+            betas_gt_filtered[combined_mask],
+            trans_gt_filtered[combined_mask],
+            poses_cmp_filtered[combined_mask],
+            betas_cmp_filtered[combined_mask],
+            trans_cmp_filtered[combined_mask],
             gender_gt,
             gender_hat,
-            world2cam[good_frames_mask],
+            world2cam[combined_mask],
         )
 
         return metrics, metrics_extra, method
