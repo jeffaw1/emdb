@@ -8,6 +8,9 @@ import numpy as np
 # TODO update paths to match your setup
 EMDB_ROOT = "V:/emdb"
 SMPLX_MODELS = "D:/data/smplx_models"
+GT_ANALYSIS_OUTPUT = "V:/emdb/gt_analysis"
+POSE_SELECTION_OUTPUT = "V:/emdb/selected_poses"
+VIDEO_OUTPUT = "V:/emdb/generated_videos"
 
 SMPL_SKELETON = np.array(
     [

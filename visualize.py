@@ -244,9 +244,38 @@ if __name__ == "__main__":
         action="store_true",
         help="Render SMPL and camera trajectories.",
     )
+    parser.add_argument(
+        "--analyze_gt",
+        action="store_true",
+        help="Perform ground truth analysis.",
+    )
+    parser.add_argument(
+        "--select_poses",
+        type=int,
+        default=0,
+        help="Number of poses to select for evaluation. If 0, skip pose selection.",
+    )
+    parser.add_argument(
+        "--generate_videos",
+        action="store_true",
+        help="Generate videos for selected poses.",
+    )
 
     args = parser.parse_args()
 
     C.update_conf({"smplx_models": SMPLX_MODELS})
+
+    if args.analyze_gt:
+        from gt_analysis import analyze_ground_truth
+        analyze_ground_truth([get_sequence_root(args)])
+
+    if args.select_poses > 0:
+        from pose_selection import select_poses
+        selected_poses = select_poses({get_sequence_root(args): None}, args.select_poses)
+        print(f"Selected poses: {selected_poses}")
+
+    if args.generate_videos:
+        from video_generation import generate_videos
+        generate_videos([(get_sequence_root(args), 0)], [get_sequence_root(args)])
 
     main(args)
