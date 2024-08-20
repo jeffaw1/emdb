@@ -1,6 +1,7 @@
 """
 Video generation for selected poses.
 """
+import os
 import cv2
 import numpy as np
 

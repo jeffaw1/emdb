@@ -1,6 +1,7 @@
 """
 Input format specification for model evaluation.
 """
+import os
 
 def validate_input_format(sequence_roots):
     """
