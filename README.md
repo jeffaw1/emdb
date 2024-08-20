@@ -49,6 +49,61 @@ python visualize_GLAMR.py
 
 ## Evaluation
 
+### New Evaluation Pipeline
+We have implemented a new evaluation pipeline to efficiently evaluate multiple models with limited GPU resources. The pipeline includes the following components:
+
+1. **Input Format Specification**: Validates the input data format for model evaluation.
+2. **Ground Truth Analysis**: Performs data science analyses on the ground truth SMPL data.
+3. **Pose Selection**: Chooses a varied and representative set of poses for evaluation.
+4. **Video Generation**: Creates 10-second videos centered around the selected poses.
+
+To use the new evaluation pipeline, follow these steps:
+
+1. Ensure your input data follows the format specified in `input_specification.py`.
+2. Run the ground truth analysis:
+   ```python
+   python gt_analysis.py
+   ```
+3. Select poses for evaluation:
+   ```python
+   python pose_selection.py --num_poses 10
+   ```
+4. Generate videos for the selected poses:
+   ```python
+   python video_generation.py
+   ```
+5. Run the evaluation with the new components:
+   ```python
+   python evaluate.py {RESULT_ROOT} --num_poses 10
+   ```
+
+### Evaluating Multiple Models
+To evaluate multiple models, follow these steps:
+
+1. Prepare your model results in the following structure:
+   ```
+   RESULT_ROOT
+   ├── PX
+       ├── sequence1
+           ├── model1-out
+               ├── 000000.pkl
+               ├── 000001.pkl
+               ├── ...
+           ├── model2-out
+               ├── 000000.pkl
+               ├── 000001.pkl
+               ├── ...
+       ├── sequence2
+       ├── ...
+       ├── sequenceN
+   ```
+2. For each model, follow the steps in the "How to evaluate your own method" section below.
+3. Add all the models you want to evaluate to the `baselines_to_evaluate` list in `evaluate.py`.
+4. Run the evaluation script:
+   ```python
+   python evaluate.py {RESULT_ROOT} --num_poses 10
+   ```
+
 ### Example using HybrIK
 We provide code to load and evaluate HybrIK results on the EMDB test set, which in the paper is referred to as `EMDB 1`. Based on this evaluation code, it should be straight-forward to extend the evaluation to other methods (see below).
 
