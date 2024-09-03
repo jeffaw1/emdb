@@ -6,8 +6,11 @@ Define a few constants that we need throughout.
 import numpy as np
 
 # TODO update paths to match your setup
-EMDB_ROOT = "V:/emdb"
-SMPLX_MODELS = "D:/data/smplx_models"
+EMDB_ROOT = "/content/drive/MyDrive/EMDB/cropped_subset_dataset_padding/close_up"
+
+SMPLX_MODELS = "/content/drive/MyDrive/SMPLer-X/human_model_files"
+
+SHOT_TYPE = "close_up"
 
 SMPL_SKELETON = np.array(
     [
