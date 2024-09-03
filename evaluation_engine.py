@@ -69,12 +69,14 @@ class EvaluationEngine(object):
         poses_root = data["smpl"]["poses_root"]
         betas = data["smpl"]["betas"]
         trans = data["smpl"]["trans"]
+        vis_vertices = data["visible_vertices"]
+        vis_joints = data["visible_joints"]
 
         poses_gt = np.concatenate([poses_root, poses_body], axis=-1)
         betas_gt = np.repeat(betas.reshape((1, -1)), repeats=data["n_frames"], axis=0)
         trans_gt = trans
 
-        return poses_gt, betas_gt, trans_gt
+        return poses_gt, betas_gt, trans_gt, vis_vertices, vis_joints
 
     def load_good_frames_mask(self, sequence_root):
         """Return the mask that says which frames are good and whic are not (because the human is too occluded)."""
@@ -89,7 +91,7 @@ class EvaluationEngine(object):
             # This will select whatever gender the ground-truth specifies.
             return None
 
-    def compare2method(self, poses_gt, betas_gt, trans_gt, sequence_root, result_root, method):
+    def compare2method(self, poses_gt, betas_gt, trans_gt, sequence_root, result_root, method, vis_vertices, vis_joints):
         """Load this method's results and compute the metrics on them."""
 
         # Load the baseline results
@@ -130,6 +132,8 @@ class EvaluationEngine(object):
             trans_cmp,
             gender_gt,
             gender_hat,
+            vis_vertices,
+            vis_joints,
             world2cam,
         )
 
@@ -139,10 +143,10 @@ class EvaluationEngine(object):
         """Evaluate a single sequence for all methods."""
         ms, ms_extra, ms_names = [], [], []
 
-        poses_gt, betas_gt, trans_gt = self.load_emdb_gt(sequence_root)
+        poses_gt, betas_gt, trans_gt, vis_vertices, vis_joints = self.load_emdb_gt(sequence_root)
 
         for method in methods:
-            m, m_extra, ms_name = self.compare2method(poses_gt, betas_gt, trans_gt, sequence_root, result_root, method)
+            m, m_extra, ms_name = self.compare2method(poses_gt, betas_gt, trans_gt, sequence_root, result_root, method, vis_vertices, vis_joints)
 
             ms.append(m)
             ms_extra.append(m_extra)
