@@ -59,7 +59,7 @@ def load_scoreHMR(result_root, force_load=False):
     """Load scoreHMR results."""
     hybrik_cache_dir = os.path.join(result_root, "cache")
     hybrik_cache_file = os.path.join(hybrik_cache_dir, "scoreHMR-out.npz")
-    
+    print('result_root', result_root)
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
         
