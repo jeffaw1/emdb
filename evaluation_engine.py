@@ -12,12 +12,15 @@ from tabulate import tabulate
 
 from evaluation_loaders import load_hybrik, load_scoreHMR
 
+from configuration import SHOT_TYPE
+
+
 HYBRIK = "HybrIK"
 SCOREHMR = "scoreHMR"
 
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
-    SCOREHMR: "scoreHMR-out",
+    SCOREHMR: "ScoreHMR2",
 }
 
 METHOD_TO_LOAD_FUNCTION = {
@@ -41,11 +44,12 @@ class EvaluationEngine(object):
         subject_id = res[-2]
         seq_id = res[-1]
         return subject_id, seq_id
-
+    
     @functools.lru_cache()
     def _get_emdb_data(self, sequence_root):
         subject_id, seq_id = self.get_ids_from_sequence_root(sequence_root)
-        data_file = os.path.join(sequence_root, f"{subject_id}_{seq_id}_data.pkl")
+
+        data_file = os.path.join(sequence_root, f"{subject_id}_{seq_id}_{SHOT_TYPE}_data.pkl")
         with open(os.path.join(sequence_root, data_file), "rb") as f:
             data = pkl.load(f)
         return data
@@ -104,9 +108,9 @@ class EvaluationEngine(object):
         gender_hat = self.get_gender_for_baseline(method)
 
         # For some frames there is too much occlusion, we ignore these.
-        good_frames_mask = self.load_good_frames_mask(sequence_root)
+        #good_frames_mask = self.load_good_frames_mask(sequence_root)
 
-        metrics, metrics_extra = self.compute_metrics(
+        '''metrics, metrics_extra = self.compute_metrics(
             poses_gt[good_frames_mask],
             betas_gt[good_frames_mask],
             trans_gt[good_frames_mask],
@@ -116,6 +120,17 @@ class EvaluationEngine(object):
             gender_gt,
             gender_hat,
             world2cam[good_frames_mask],
+        )'''
+        metrics, metrics_extra = self.compute_metrics(
+            poses_gt,
+            betas_gt,
+            trans_gt,
+            poses_cmp,
+            betas_cmp,
+            trans_cmp,
+            gender_gt,
+            gender_hat,
+            world2cam,
         )
 
         return metrics, metrics_extra, method
