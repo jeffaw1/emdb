@@ -13,13 +13,16 @@ from tabulate import tabulate
 from evaluation_loaders import load_hybrik
 
 HYBRIK = "HybrIK"
+SCOREHMR = "scoreHMR"
 
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
+    SCOREHMR: "scoreHMR-out",
 }
 
 METHOD_TO_LOAD_FUNCTION = {
     HYBRIK: load_hybrik,
+    SCOREHMR: load_scoreHMR,
 }
 
 
@@ -76,7 +79,7 @@ class EvaluationEngine(object):
 
     def get_gender_for_baseline(self, method):
         """Which gender to use for the baseline method."""
-        if method in [HYBRIK]:
+        if method in [HYBRIK, SCOREHMR]:
             return "neutral"
         else:
             # This will select whatever gender the ground-truth specifies.
