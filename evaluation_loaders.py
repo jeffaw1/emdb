@@ -49,3 +49,44 @@ def load_hybrik(result_root, force_load):
         hybrik_trans = hybrik_results["hybrik_trans"]
 
     return hybrik_poses, hybrik_betas, hybrik_trans
+
+import os
+import glob
+import numpy as np
+import pickle as pkl
+
+def load_scoreHMR(result_root, force_load=False):
+    """Load scoreHMR results."""
+    hybrik_cache_dir = os.path.join(result_root, "cache")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "scoreHMR-out.npz")
+    
+    if not os.path.exists(hybrik_cache_file) or force_load:
+        pose_hat, shape_hat, trans_hat = [], [], []
+        
+        for pkl_file in sorted(glob.glob(os.path.join(result_root, "*.pkl"))):
+            with open(pkl_file, "rb") as f:
+                frame_data = pkl.load(f)
+            
+            pose_hat.append(np.concatenate([frame_data['poses_root'], frame_data['poses_body']], axis=1))
+            shape_hat.append(frame_data['betas'])
+            trans_hat.append(frame_data['trans'])
+        
+        pose_hat = np.concatenate(pose_hat, axis=0)  # Shape: (N, 72)
+        shape_hat = np.concatenate(shape_hat, axis=0)  # Shape: (N, 10)
+        trans_hat = np.concatenate(trans_hat, axis=0)  # Shape: (N, 3)
+        
+        os.makedirs(hybrik_cache_dir, exist_ok=True)
+        np.savez_compressed(
+            hybrik_cache_file,
+            pose_hat=pose_hat,
+            shape_hat=shape_hat,
+            trans_hat=trans_hat,
+        )
+    else:
+        hybrik_results = np.load(hybrik_cache_file)
+        pose_hat = hybrik_results["pose_hat"]
+        shape_hat = hybrik_results["shape_hat"]
+        trans_hat = hybrik_results["trans_hat"]
+    
+    return pose_hat, shape_hat, trans_hat
+
