@@ -10,7 +10,7 @@ import pickle as pkl
 import numpy as np
 from tabulate import tabulate
 
-from evaluation_loaders import load_hybrik
+from evaluation_loaders import load_hybrik, load_scoreHMR
 
 HYBRIK = "HybrIK"
 SCOREHMR = "scoreHMR"
