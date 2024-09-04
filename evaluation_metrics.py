@@ -66,6 +66,8 @@ def get_data(
     glb_rot_mats_pred = global_oris_hat.reshape((n_frames, -1, 3, 3)).detach().cpu().numpy()
     glb_rot_mats_pred = glb_rot_mats_pred[:, SMPL_OR_JOINTS]
 
+    print('HEREEEEE jp_pred', jp_pred.shape)
+    print('HEREEEEE jp_gt', jp_gt.shape)
     return jp_pred, jp_gt, glb_rot_mats_pred, glb_rot_mats_gt, verts_pred, verts_gt
 
 def align_by_pelvis(joints, verts=None):
@@ -115,8 +117,11 @@ def compute_jitter(preds3d, gt3ds, visible_joints, ignored_joints_idxs=None, fps
     for i in range(3, n_frames):
         visible_idx = list(set(visible_joints[i]) & set(visible_joints[i-1]) & set(visible_joints[i-2]) & set(visible_joints[i-3]))
         visible_idx = [idx for idx in visible_idx if idx not in ignored_joints_idxs]
-        
+        if len(visible_idx) == 0:
+            visible_idx = [15]
+
         if len(visible_idx) > 0:
+
             jkp_frame = np.linalg.norm(
                 (preds3d[i, visible_idx] - 3 * preds3d[i-1, visible_idx] + 3 * preds3d[i-2, visible_idx] - preds3d[i-3, visible_idx]) * (fps**3),
                 axis=1
@@ -127,7 +132,8 @@ def compute_jitter(preds3d, gt3ds, visible_joints, ignored_joints_idxs=None, fps
             )
             jkp.append(jkp_frame)
             jkt.append(jkt_frame)
-
+    if not jkp or not jkt:  # If jkp or jkt is empty
+          return np.nan, np.nan, np.nan, np.nan
     jkp = np.concatenate(jkp)
     jkt = np.concatenate(jkt)
 
@@ -219,6 +225,8 @@ def compute_positional_errors(pred_joints, gt_joints, pred_verts, gt_verts, visi
             pd3d_jps = align_by_pelvis(pd3d_jps)
 
         visible_joints_idx = visible_joints[i]
+        if len(visible_joints_idx) == 0:
+            visible_idx = [15]
         joint_error = np.sqrt(np.sum((gt3d_jps[visible_joints_idx] - pd3d_jps[visible_joints_idx]) ** 2, axis=1))
         errors_jps.append(np.mean(joint_error))
 
@@ -312,6 +320,8 @@ def compute_metrics(
         "jitter_pd_std": jkp_std,  # Scalar
         "jitter_gt_mean": jkt_mean,  # Scalar
         "jitter_gt_std": jkt_std,  # Scalar
+        "visible_joints": visible_joints,
+        "visible_vertices": visible_vertices
     }
 
     return metrics, metrics_extra
