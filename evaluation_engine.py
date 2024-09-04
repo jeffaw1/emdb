@@ -17,15 +17,21 @@ from configuration import SHOT_TYPE
 
 HYBRIK = "HybrIK"
 SCOREHMR = "scoreHMR"
+NIKI = "Niki"
+TRAM = "Tram"
 
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
     SCOREHMR: "ScoreHMR2",
+    NIKI: "Niki",
+    TRAM: "Tram",
 }
 
 METHOD_TO_LOAD_FUNCTION = {
     HYBRIK: load_hybrik,
     SCOREHMR: load_scoreHMR,
+    NIKI: load_niki,
+    TRAM: load_tram,
 }
 
 
@@ -85,7 +91,7 @@ class EvaluationEngine(object):
 
     def get_gender_for_baseline(self, method):
         """Which gender to use for the baseline method."""
-        if method in [HYBRIK, SCOREHMR]:
+        if method in [HYBRIK, SCOREHMR, NIKI, TRAM]:
             return "neutral"
         else:
             # This will select whatever gender the ground-truth specifies.
