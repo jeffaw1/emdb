@@ -5,12 +5,13 @@ Define a few constants that we need throughout.
 """
 import numpy as np
 
+SHOT_TYPE = "close_up"
+
 # TODO update paths to match your setup
-EMDB_ROOT = "/content/drive/MyDrive/EMDB/cropped_subset_dataset_padding/close_up"
+EMDB_ROOT = f"/content/drive/MyDrive/EMDB/test_cropped_subset_dataset_min_512/{SHOT_TYPE}"
 
 SMPLX_MODELS = "/content/drive/MyDrive/SMPLer-X/human_model_files"
 
-SHOT_TYPE = "close_up"
 
 SMPL_SKELETON = np.array(
     [
