@@ -179,6 +179,10 @@ class EvaluationEngine(object):
         ms_all = None
         ms_names = None
         n_frames = 0
+        n_nans = {method: 0 for method in methods}
+        total_joints = 0
+        total_vertices = 0
+
         for sequence_root in sequence_roots:
             ms, ms_extra, ms_names = self.evaluate_single_sequence(sequence_root, result_root, methods)
 
@@ -190,45 +194,45 @@ class EvaluationEngine(object):
             if ms_all is None:
                 ms_all = [collections.defaultdict(list) for _ in ms]
 
-            for i in range(len(ms)):
-                ms_all[i]["mpjpe_all"].append(ms_extra[i]["mpjpe_all"])
-                ms_all[i]["mpjpe_pa_all"].append(ms_extra[i]["mpjpe_pa_all"])
-                ms_all[i]["mpjae_all"].append(np.mean(ms_extra[i]["mpjae_all"], axis=-1))  # Mean over joints.
-                ms_all[i]["mpjae_pa_all"].append(np.mean(ms_extra[i]["mpjae_pa_all"], axis=-1))  # Mean over joints.
-                ms_all[i]["jitter_pd"].append(ms_extra[i]["jitter_pd"])
-                if "mve_all" in ms_extra[i]:
-                    ms_all[i]["mve_all"].append(ms_extra[i]["mve_all"])
-                if "mve_pa_all" in ms_extra[i]:
-                    ms_all[i]["mve_pa_all"].append(ms_extra[i]["mve_pa_all"])
+            for i, method in enumerate(methods):
+                for metric in ["mpjpe_all", "mpjpe_pa_all", "mpjae_all", "mpjae_pa_all", "mve_all", "mve_pa_all"]:
+                    if metric in ms_extra[i]:
+                        valid_data = ms_extra[i][metric][~np.isnan(ms_extra[i][metric])]
+                        if len(valid_data) > 0:
+                            ms_all[i][metric].append(valid_data)
+                        n_nans[method] += np.sum(np.isnan(ms_extra[i][metric]))
+                
+                if "jitter_pd" in ms_extra[i] and not np.isnan(ms_extra[i]["jitter_pd"]):
+                    ms_all[i]["jitter_pd"].append(ms_extra[i]["jitter_pd"])
+                
+                # Count joints and vertices if available
+                if "visible_joints" in ms_extra[i]:
+                    total_joints += np.sum([len(joints) for joints in ms_extra[i]["visible_joints"]])
+                if "visible_vertices" in ms_extra[i]:
+                    total_vertices += np.sum([len(verts) for verts in ms_extra[i]["visible_vertices"]])
 
         # Compute the mean and std over all sequences.
         ms_all_agg = []
-        for i in range(len(ms_all)):
-            mpjpe_all = np.concatenate(ms_all[i]["mpjpe_all"], axis=0)
-            mpjpe_pa_all = np.concatenate(ms_all[i]["mpjpe_pa_all"], axis=0)
-            mpjae_all = np.concatenate(ms_all[i]["mpjae_all"], axis=0)
-            mpjae_pa_all = np.concatenate(ms_all[i]["mpjae_pa_all"], axis=0)
-            jitter_all = np.array(ms_all[i]["jitter_pd"])
-            metrics = {
-                "MPJPE [mm]": np.mean(mpjpe_all),
-                "MPJPE std": np.std(mpjpe_all),
-                "MPJPE_PA [mm]": np.mean(mpjpe_pa_all),
-                "MPJPE_PA std": np.std(mpjpe_pa_all),
-                "MPJAE [deg]": np.mean(mpjae_all),
-                "MPJAE std": np.std(mpjae_all),
-                "MPJAE_PA [deg]": np.mean(mpjae_pa_all),
-                "MPJAE_PA std": np.std(mpjae_pa_all),
-                "Jitter [10m/s^3]": np.mean(jitter_all),
-                "Jitter std": np.std(jitter_all),
-            }
-            if "mve_all" in ms_all[i]:
-                mve_all = np.concatenate(ms_all[i]["mve_all"], axis=0)
-                metrics["MVE [mm]"] = np.mean(mve_all)
-                metrics["MVE std"] = np.std(mve_all)
-            if "mve_pa_all" in ms_all[i]:
-                mve_pa_all = np.concatenate(ms_all[i]["mve_pa_all"], axis=0)
-                metrics["MVE_PA [mm]"] = np.mean(mve_pa_all)
-                metrics["MVE_PA std"] = np.std(mve_pa_all)
+        for i, method in enumerate(methods):
+            metrics = {}
+            for metric in ["mpjpe_all", "mpjpe_pa_all", "mpjae_all", "mpjae_pa_all", "mve_all", "mve_pa_all"]:
+                if metric in ms_all[i] and len(ms_all[i][metric]) > 0:
+                    all_data = np.concatenate(ms_all[i][metric], axis=0)
+                    metrics[f"{metric[:-4]} [mm]" if "jae" not in metric else f"{metric[:-4]} [deg]"] = np.mean(all_data)
+                    metrics[f"{metric[:-4]} std"] = np.std(all_data)
+                else:
+                    metrics[f"{metric[:-4]} [mm]" if "jae" not in metric else f"{metric[:-4]} [deg]"] = np.nan
+                    metrics[f"{metric[:-4]} std"] = np.nan
+
+            if "jitter_pd" in ms_all[i] and len(ms_all[i]["jitter_pd"]) > 0:
+                jitter_all = np.array(ms_all[i]["jitter_pd"])
+                metrics["Jitter [10m/s^3]"] = np.mean(jitter_all)
+                metrics["Jitter std"] = np.std(jitter_all)
+            else:
+                metrics["Jitter [10m/s^3]"] = np.nan
+                metrics["Jitter std"] = np.nan
+            
+            metrics["NaN count"] = n_nans[method]
             ms_all_agg.append(metrics)
 
         print("Metrics for all sequences")
@@ -236,3 +240,8 @@ class EvaluationEngine(object):
         print(" ")
 
         print("Total Number of Frames:", n_frames)
+        if n_frames > 0:
+            print("Average Number of Joints per Frame:", total_joints / n_frames)
+            print("Average Number of Vertices per Frame:", total_vertices / n_frames)
+        for method in methods:
+            print(f"Number of NaN values for {method}:", n_nans[method])
