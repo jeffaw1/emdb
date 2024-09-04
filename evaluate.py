@@ -7,7 +7,7 @@ import os
 import pickle as pkl
 
 from configuration import EMDB_ROOT
-from evaluation_engine import HYBRIK, SCOREHMR, EvaluationEngine
+from evaluation_engine import HYBRIK, SCOREHMR, NIKI, TRAM, EvaluationEngine
 from evaluation_metrics import compute_metrics
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # Select the baselines we want to evaluate.
     baselines_to_evaluate = [HYBRIK, SCOREHMR]
-    baselines_to_evaluate = [SCOREHMR]
+    baselines_to_evaluate = [SCOREHMR, NIKI, TRAM]
 
     # Run the evaluation.
     evaluator_public = EvaluationEngine(compute_metrics)
