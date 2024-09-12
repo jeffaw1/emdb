@@ -26,7 +26,7 @@ METHOD_TO_RESULT_FOLDER = {
     SCOREHMR: "ScoreHMR2",
     NIKI: "Niki",
     TRAM: "Tram",
-    NLF = 'NLF',
+    NLF: 'NLF',
 }
 
 METHOD_TO_LOAD_FUNCTION = {
