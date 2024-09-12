@@ -10,7 +10,7 @@ import pickle as pkl
 import numpy as np
 from tabulate import tabulate
 
-from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram
+from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf
 
 from configuration import SHOT_TYPE
 
@@ -19,12 +19,14 @@ HYBRIK = "HybrIK"
 SCOREHMR = "scoreHMR"
 NIKI = "Niki"
 TRAM = "Tram"
+NLF = 'NLF'
 
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
     SCOREHMR: "ScoreHMR2",
     NIKI: "Niki",
     TRAM: "Tram",
+    NLF = 'NLF',
 }
 
 METHOD_TO_LOAD_FUNCTION = {
@@ -32,6 +34,7 @@ METHOD_TO_LOAD_FUNCTION = {
     SCOREHMR: load_scoreHMR,
     NIKI: load_niki,
     TRAM: load_tram,
+    NLF: load_nlf,
 }
 
 
@@ -91,7 +94,7 @@ class EvaluationEngine(object):
 
     def get_gender_for_baseline(self, method):
         """Which gender to use for the baseline method."""
-        if method in [HYBRIK, SCOREHMR, NIKI, TRAM]:
+        if method in [HYBRIK, SCOREHMR, NIKI, TRAM, NLF]:
             return "neutral"
         else:
             # This will select whatever gender the ground-truth specifies.
