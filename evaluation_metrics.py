@@ -298,6 +298,16 @@ def compute_metrics(
 
     jkp_mean, jkp_std, jkt_mean, jkt_std = compute_jitter(pred_joints, gt_joints, visible_joints)
 
+    # Compute vertex errors
+    # Compute vertex errors
+    vertex_errors = np.sqrt(np.sum((gt_verts - pred_verts) ** 2, axis=-1))  # (N_frames, N_vertices)
+    
+    # Create a mask for visible vertices
+    n_frames, n_vertices = vertex_errors.shape
+    vertex_visibility = np.zeros((n_frames, n_vertices), dtype=bool)
+    for i, visible in enumerate(visible_vertices):
+        vertex_visibility[i, visible] = True
+        
     # These are all scalars. Choose nice names for pretty printing later.
     metrics = {
         "MPJPE [mm]": pos_errors["mpjpe"],
@@ -321,7 +331,9 @@ def compute_metrics(
         "jitter_gt_mean": jkt_mean,  # Scalar
         "jitter_gt_std": jkt_std,  # Scalar
         "visible_joints": visible_joints,
-        "visible_vertices": visible_vertices
+        "visible_vertices": visible_vertices,
+        "vertex_errors": vertex_errors,
+        "vertex_visibility": vertex_visibility,
     }
 
     return metrics, metrics_extra
