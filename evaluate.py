@@ -5,6 +5,7 @@ import argparse
 import glob
 import os
 import pickle as pkl
+import json
 
 from configuration import EMDB_ROOT
 from evaluation_engine import HYBRIK, SCOREHMR, NIKI, TRAM, NLF, PLIKS, EvaluationEngine
@@ -30,7 +31,6 @@ if __name__ == "__main__":
         emdb1_sequence_roots.append(os.path.dirname(emdb_pkl_file))
 
     # Select the baselines we want to evaluate.
-    #baselines_to_evaluate = [HYBRIK, SCOREHMR]
     baselines_to_evaluate = [SCOREHMR, NIKI, TRAM, NLF, PLIKS]
 
     # Run the evaluation.
@@ -38,4 +38,17 @@ if __name__ == "__main__":
     print('emdb1_sequence_roots',emdb1_sequence_roots)
     print('args.result_root', args.result_root)
     print('baselines_to_evaluate', baselines_to_evaluate)
-    evaluator_public.run(emdb1_sequence_roots, args.result_root, baselines_to_evaluate)
+    all_results, sequence_results = evaluator_public.run(emdb1_sequence_roots, args.result_root, baselines_to_evaluate)
+
+    # Print summary of results
+    print("\nSummary of Results:")
+    for method, metrics in all_results.items():
+        print(f"\n{method}:")
+        for metric, value in metrics.items():
+            print(f"  {metric}: {value}")
+
+    print("\nResults have been saved to:")
+    print(f"  {os.path.join(args.result_root, 'all_results.json')}")
+    print(f"  {os.path.join(args.result_root, 'sequence_results.json')}")
+    print(f"  {os.path.join(args.result_root, 'accumulated_vertex_data.json')}")
+
