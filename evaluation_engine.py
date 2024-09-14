@@ -20,7 +20,7 @@ SCOREHMR = "scoreHMR"
 NIKI = "Niki"
 TRAM = "Tram"
 NLF = 'NLF'
-PLIKS = 'pliks
+PLIKS = 'pliks'
 
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
