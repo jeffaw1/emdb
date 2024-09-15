@@ -6,6 +6,32 @@ from aitviewer.renderables.smpl import SMPLSequence
 from aitviewer.utils import local_to_global
 
 SMPL_OR_JOINTS = np.array([0, 1, 2, 4, 5, 16, 17, 18, 19])
+import numpy as np
+
+def compute_mean_vertex_errors(vertex_errors, vertex_visibility):
+    """
+    Compute the mean error for each vertex, considering only visible vertices.
+    
+    Parameters:
+    - vertex_errors: numpy array of shape (n_frames, n_vertices) containing the error for each vertex in each frame
+    - vertex_visibility: boolean numpy array of shape (n_frames, n_vertices) indicating which vertices are visible in each frame
+    
+    Returns:
+    - mean_errors: numpy array of shape (n_vertices,) containing the mean error for each vertex
+    - visibility_mask: boolean numpy array of shape (n_vertices,) indicating which vertices were visible at least once
+    """
+    
+    # Compute the mean error for each vertex, considering only visible frames
+    visible_errors = np.where(vertex_visibility, vertex_errors, np.nan)
+    mean_errors = np.nanmean(visible_errors, axis=0)
+    
+    # Create a mask for vertices that were visible at least once
+    visibility_mask = np.any(vertex_visibility, axis=0)
+    
+    # Set mean error to NaN for vertices that were never visible
+    mean_errors[~visibility_mask] = np.nan
+    
+    return mean_errors, visibility_mask
 
 def get_data(
     pose_gt,
@@ -307,7 +333,9 @@ def compute_metrics(
     vertex_visibility = np.zeros((n_frames, n_vertices), dtype=bool)
     for i, visible in enumerate(visible_vertices):
         vertex_visibility[i, visible] = True
-        
+
+    mean_vertex_errors, vertex_visibility_mask = compute_mean_vertex_errors(vertex_errors, vertex_visibility)
+
     # These are all scalars. Choose nice names for pretty printing later.
     metrics = {
         "MPJPE [mm]": pos_errors["mpjpe"],
@@ -318,6 +346,7 @@ def compute_metrics(
         "MVE_PA [mm]": pos_errors["mve_pa"],
         "Jitter [km/s^3]": jkp_mean,
     }
+    mean_errors, visibility_mask = compute_mean_vertex_errors(metrics_extra['vertex_errors'], metrics_extra['vertex_visibility'])
 
     metrics_extra = {
         "mpjpe_all": pos_errors["mpjpe_pf"],  # (N,)
@@ -334,6 +363,8 @@ def compute_metrics(
         "visible_vertices": visible_vertices,
         "vertex_errors": vertex_errors,
         "vertex_visibility": vertex_visibility,
+        "mean_vertex_errors": mean_vertex_errors,
+        "vertex_visibility_mask": vertex_visibility_mask
     }
 
     return metrics, metrics_extra
