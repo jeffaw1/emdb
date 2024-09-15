@@ -143,8 +143,6 @@ class EvaluationEngine(object):
             world2cam,
         )
 
-        #metrics, metrics_extra, method = super().compare2method(poses_gt, betas_gt, trans_gt, sequence_root, result_root, method, vis_vertices, vis_joints)
-
         # Accumulate vertex errors and visibility counts
         vertex_errors = metrics_extra.get('vertex_errors', np.array([]))
         vertex_visibility = metrics_extra.get('vertex_visibility', np.array([]))
@@ -230,6 +228,8 @@ class EvaluationEngine(object):
         n_nans = {method: 0 for method in methods}
         total_joints = 0
         total_vertices = 0
+        accumulated_vertex_errors = {method: [] for method in methods}
+        accumulated_vertex_visibility = {method: [] for method in methods}
 
         all_results = {}
         sequence_results = {}
@@ -267,7 +267,11 @@ class EvaluationEngine(object):
                     total_joints += np.sum([len(joints) for joints in ms_extra[i]["visible_joints"]])
                 if "visible_vertices" in ms_extra[i]:
                     total_vertices += np.sum([len(verts) for verts in ms_extra[i]["visible_vertices"]])
-
+                
+                # Accumulate vertex errors and visibility masks
+                if 'mean_vertex_errors' in ms_extra[i] and 'vertex_visibility_mask' in ms_extra[i]:
+                    accumulated_vertex_errors[method].append(ms_extra[i]['mean_vertex_errors'])
+                    accumulated_vertex_visibility[method].append(ms_extra[i]['vertex_visibility_mask'])
         # Compute the mean and std over all sequences.
         ms_all_agg = []
         for i, method in enumerate(methods):
@@ -303,7 +307,26 @@ class EvaluationEngine(object):
             print("Average Number of Vertices per Frame:", total_vertices / n_frames)
         for method in methods:
             print(f"Number of NaN values for {method}:", n_nans[method])
+        
+        # Compute mean vertex errors and visibility across all sequences
+        for method in methods:
+            if accumulated_vertex_errors[method]:
+                all_vertex_errors = np.stack(accumulated_vertex_errors[method], axis=0)
+                all_vertex_visibility = np.stack(accumulated_vertex_visibility[method], axis=0)
+                
+                # Compute mean error for each vertex, considering only visible instances
+                with np.errstate(invalid='ignore'):  # Suppress warnings about NaN
+                    mean_vertex_errors = np.nanmean(np.where(all_vertex_visibility, all_vertex_errors, np.nan), axis=0)
+                
+                # Handle cases where a vertex was never visible
+                mean_vertex_errors = np.where(np.isnan(mean_vertex_errors), -1, mean_vertex_errors)
+                
+                # Compute overall visibility mask
+                overall_visibility_mask = np.any(all_vertex_visibility, axis=0)
 
+                all_results[method]['mean_vertex_errors'] = mean_vertex_errors
+                all_results[method]['vertex_visibility_mask'] = overall_visibility_mask
+        
         def convert_to_serializable(obj):
             if isinstance(obj, np.integer):
                 return int(obj)
@@ -340,3 +363,4 @@ class EvaluationEngine(object):
         self.save_accumulated_data(result_root)
 
         return all_results, sequence_results
+
