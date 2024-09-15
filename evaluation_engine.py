@@ -10,7 +10,7 @@ import json
 import numpy as np
 from tabulate import tabulate
 
-from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf, load_pliks
+from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf, load_nlfs, load_pliks
 
 from configuration import SHOT_TYPE
 
@@ -20,6 +20,7 @@ SCOREHMR = "scoreHMR"
 NIKI = "Niki"
 TRAM = "Tram"
 NLF = 'NLF'
+NLFs = 'NLFs'
 PLIKS = 'pliks'
 
 METHOD_TO_RESULT_FOLDER = {
@@ -28,7 +29,8 @@ METHOD_TO_RESULT_FOLDER = {
     NIKI: "Niki",
     TRAM: "Tram",
     NLF: 'NLF',
-    PLIKS: 'pliks'
+    PLIKS: 'pliks',
+    NLFs: 'NLFs',
 }
 
 METHOD_TO_LOAD_FUNCTION = {
@@ -37,6 +39,7 @@ METHOD_TO_LOAD_FUNCTION = {
     NIKI: load_niki,
     TRAM: load_tram,
     NLF: load_nlf,
+    NLFs: load_nlfs,
     PLIKS: load_pliks,
 }
 
@@ -102,7 +105,7 @@ class EvaluationEngine(object):
 
     def get_gender_for_baseline(self, method):
         """Which gender to use for the baseline method."""
-        if method in [HYBRIK, SCOREHMR, NIKI, TRAM, NLF, PLIKS]:
+        if method in [HYBRIK, SCOREHMR, NIKI, TRAM, NLF, PLIKS, NLFs]:
             return "neutral"
         else:
             # This will select whatever gender the ground-truth specifies.
