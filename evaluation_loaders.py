@@ -234,6 +234,7 @@ def load_nlf(result_root, force_load=False):
 def load_nlfs(result_root, force_load=False):
     """Load scoreHMR results."""
     #result_root = os.path.join(result_root, "smoothnet_windowsize32_smoothed")
+    #print('result_root:::', result_root)
     hybrik_cache_dir = os.path.join(result_root, "cache")
     hybrik_cache_file = os.path.join(hybrik_cache_dir, "nlfs_out.npz")
     print('result_root', result_root)
