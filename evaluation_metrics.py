@@ -346,7 +346,7 @@ def compute_metrics(
         "MVE_PA [mm]": pos_errors["mve_pa"],
         "Jitter [km/s^3]": jkp_mean,
     }
-    mean_errors, visibility_mask = compute_mean_vertex_errors(metrics_extra['vertex_errors'], metrics_extra['vertex_visibility'])
+    #mean_errors, visibility_mask = compute_mean_vertex_errors(metrics_extra['vertex_errors'], metrics_extra['vertex_visibility'])
 
     metrics_extra = {
         "mpjpe_all": pos_errors["mpjpe_pf"],  # (N,)
