@@ -30,7 +30,7 @@ METHOD_TO_RESULT_FOLDER = {
     TRAM: "Tram",
     NLF: 'NLF',
     PLIKS: 'pliks',
-    NLFs: 'NLFs',
+    NLFs: 'NLF/smoothnet_windowsize32_smoothed',
 }
 
 METHOD_TO_LOAD_FUNCTION = {
