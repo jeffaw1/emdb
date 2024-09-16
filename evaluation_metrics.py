@@ -379,4 +379,3 @@ def compute_metrics(
     }
 
     return metrics, metrics_extra
-
