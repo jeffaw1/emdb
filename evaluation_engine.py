@@ -152,36 +152,25 @@ class EvaluationEngine(object):
             self.vertex_counts[method].append(vertex_visibility)
 
         return metrics, metrics_extra, method
-    def save_accumulated_data(self, result_root):
-        """Save accumulated vertex error data to a JSON file."""
-        accumulated_data = {}
-
-        for method in self.vertex_errors.keys():
-            if self.vertex_errors[method] and self.vertex_counts[method]:
-                # Stack errors and counts across all sequences
-                all_errors = np.concatenate(self.vertex_errors[method], axis=0)  # (N_vertices, total_frames, 3)
-                all_counts = np.concatenate(self.vertex_counts[method], axis=0)  # (N_vertices, total_frames)
-
-                # Calculate mean error for each vertex
-                mean_errors = np.sum(all_errors, axis=0) / np.sum(all_counts, axis=0, keepdims=True)
-                mean_errors = np.nan_to_num(mean_errors, nan=0.0)  # Replace NaNs with 0
-
-                accumulated_data[method] = {
-                    "mean_vertex_errors": mean_errors.tolist(),
-                    "total_vertex_counts": np.sum(all_counts, axis=0).tolist(),
-                    "total_frames": all_errors.shape[0]
-                }
-
-        # Save faces data (assuming it's the same for all methods)
-        data = self._get_emdb_data(self.sequence_roots[0])
-        #accumulated_data["faces"] = data["smpl"]["faces"].tolist()
-
-        # Save to JSON file
-        output_file = os.path.join(result_root, "accumulated_vertex_data.json")
-        with open(output_file, "w") as f:
-            json.dump(accumulated_data, f)
-
-        print(f"Accumulated vertex data saved to {output_file}")
+        
+    def save_detailed_results(self, result_root, all_results, sequence_results):
+        """Save detailed results for later visualization."""
+        output_file = os.path.join(result_root, "detailed_results.npz")
+        
+        # Convert numpy arrays to lists for JSON serialization
+        json_compatible_results = {}
+        for method, data in all_results.items():
+            json_compatible_results[method] = {
+                k: v.tolist() if isinstance(v, np.ndarray) else v
+                for k, v in data.items()
+            }
+        
+        # Save the results
+        np.savez_compressed(output_file,
+                            all_results=json.dumps(json_compatible_results),
+                            sequence_results=json.dumps(sequence_results))
+        
+        print(f"Detailed results saved to {output_file}")
 
     def evaluate_single_sequence(self, sequence_root, result_root, methods):
         """Evaluate a single sequence for all methods."""
@@ -216,151 +205,77 @@ class EvaluationEngine(object):
 
     def run(self, sequence_roots, result_root, methods):
         """Run the evaluation on all sequences and all methods."""
-        self.sequence_roots = sequence_roots  # Store for later use
-
         if not isinstance(sequence_roots, list):
             sequence_roots = [sequence_roots]
-
-        # For every baseline, accumulate the metrics of all frames so that we can later compute statistics on them.
-        ms_all = None
-        ms_names = None
-        n_frames = 0
-        n_nans = {method: 0 for method in methods}
-        total_joints = 0
-        total_vertices = 0
-        accumulated_vertex_errors = {method: [] for method in methods}
-        accumulated_vertex_visibility = {method: [] for method in methods}
-
-        all_results = {}
+    
+        all_results = {method: {} for method in methods}
         sequence_results = {}
-
+        ms_all = {method: collections.defaultdict(list) for method in methods}
+    
         for sequence_root in sequence_roots:
             ms, ms_extra, ms_names = self.evaluate_single_sequence(sequence_root, result_root, methods)
-
-            print("Metrics for sequence {}".format(sequence_root))
+    
+            print(f"Metrics for sequence {sequence_root}")
             print(self.to_pretty_string(ms, ms_names))
-
-            # Save individual sequence results
-            sequence_results[sequence_root] = {
-                method: {**m, **{k: v.tolist() if isinstance(v, np.ndarray) else v for k, v in me.items()}}
-                for method, m, me in zip(ms_names, ms, ms_extra)
-            }
-
-            n_frames += ms_extra[0]["mpjpe_all"].shape[0]
-
-            if ms_all is None:
-                ms_all = [collections.defaultdict(list) for _ in ms]
-
-            for i, method in enumerate(methods):
+    
+            for method, m, me in zip(ms_names, ms, ms_extra):
+                sequence_results.setdefault(method, {})[sequence_root] = {
+                    **m,
+                    **{k: v.tolist() if isinstance(v, np.ndarray) else v for k, v in me.items()}
+                }
+    
+                # Accumulate data for overall results
                 for metric in ["mpjpe_all", "mpjpe_pa_all", "mpjae_all", "mpjae_pa_all", "mve_all", "mve_pa_all"]:
-                    if metric in ms_extra[i]:
-                        valid_data = ms_extra[i][metric][~np.isnan(ms_extra[i][metric])]
-                        if len(valid_data) > 0:
-                            ms_all[i][metric].append(valid_data)
-                        n_nans[method] += np.sum(np.isnan(ms_extra[i][metric]))
+                    if metric in me:
+                        ms_all[method][metric].append(me[metric])
                 
-                if "jitter_pd" in ms_extra[i] and not np.isnan(ms_extra[i]["jitter_pd"]):
-                    ms_all[i]["jitter_pd"].append(ms_extra[i]["jitter_pd"])
-                
-                # Count joints and vertices if available
-                if "visible_joints" in ms_extra[i]:
-                    total_joints += np.sum([len(joints) for joints in ms_extra[i]["visible_joints"]])
-                if "visible_vertices" in ms_extra[i]:
-                    total_vertices += np.sum([len(verts) for verts in ms_extra[i]["visible_vertices"]])
-                
-                # Accumulate vertex errors and visibility masks
-                if 'mean_vertex_errors' in ms_extra[i] and 'vertex_visibility_mask' in ms_extra[i]:
-                    accumulated_vertex_errors[method].append(ms_extra[i]['mean_vertex_errors'])
-                    accumulated_vertex_visibility[method].append(ms_extra[i]['vertex_visibility_mask'])
-        # Compute the mean and std over all sequences.
-        ms_all_agg = []
-        for i, method in enumerate(methods):
+                if "jitter_pd" in me and not np.isnan(me["jitter_pd"]):
+                    ms_all[method]["jitter_pd"].append(me["jitter_pd"])
+    
+                all_results[method].setdefault('vertex_visibility_mask', []).append(me.get('vertex_visibility_mask', []))
+    
+        # Compute overall statistics
+        for method in methods:
             metrics = {}
             for metric in ["mpjpe_all", "mpjpe_pa_all", "mpjae_all", "mpjae_pa_all", "mve_all", "mve_pa_all"]:
-                if metric in ms_all[i] and len(ms_all[i][metric]) > 0:
-                    all_data = np.concatenate(ms_all[i][metric], axis=0)
+                if ms_all[method][metric]:
+                    all_data = np.concatenate(ms_all[method][metric], axis=0)
                     metrics[f"{metric[:-4]} [mm]" if "jae" not in metric else f"{metric[:-4]} [deg]"] = float(np.mean(all_data))
                     metrics[f"{metric[:-4]} std"] = float(np.std(all_data))
                 else:
                     metrics[f"{metric[:-4]} [mm]" if "jae" not in metric else f"{metric[:-4]} [deg]"] = np.nan
                     metrics[f"{metric[:-4]} std"] = np.nan
-
-            if "jitter_pd" in ms_all[i] and len(ms_all[i]["jitter_pd"]) > 0:
-                jitter_all = np.array(ms_all[i]["jitter_pd"])
+    
+            if ms_all[method]["jitter_pd"]:
+                jitter_all = np.array(ms_all[method]["jitter_pd"])
                 metrics["Jitter [10m/s^3]"] = float(np.mean(jitter_all))
                 metrics["Jitter std"] = float(np.std(jitter_all))
             else:
                 metrics["Jitter [10m/s^3]"] = np.nan
                 metrics["Jitter std"] = np.nan
+    
+            all_results[method].update(metrics)
             
-            metrics["NaN count"] = n_nans[method]
-            ms_all_agg.append(metrics)
-            all_results[method] = metrics
-
+            # Compute overall visibility mask
+            if all_results[method]['vertex_visibility_mask']:
+                all_results[method]['vertex_visibility_mask'] = np.any(all_results[method]['vertex_visibility_mask'], axis=0).tolist()
+    
+        # Print overall metrics
         print("Metrics for all sequences")
-        print(self.to_pretty_string(ms_all_agg, ms_names))
-        print(" ")
-
-        print("Total Number of Frames:", n_frames)
-        if n_frames > 0:
-            print("Average Number of Joints per Frame:", total_joints / n_frames)
-            print("Average Number of Vertices per Frame:", total_vertices / n_frames)
-        for method in methods:
-            print(f"Number of NaN values for {method}:", n_nans[method])
-        
-        # Compute mean vertex errors and visibility across all sequences
-        for method in methods:
-            if accumulated_vertex_errors[method]:
-                all_vertex_errors = np.stack(accumulated_vertex_errors[method], axis=0)
-                all_vertex_visibility = np.stack(accumulated_vertex_visibility[method], axis=0)
-                
-                # Compute mean error for each vertex, considering only visible instances
-                with np.errstate(invalid='ignore'):  # Suppress warnings about NaN
-                    mean_vertex_errors = np.nanmean(np.where(all_vertex_visibility, all_vertex_errors, np.nan), axis=0)
-                
-                # Handle cases where a vertex was never visible
-                mean_vertex_errors = np.where(np.isnan(mean_vertex_errors), -1, mean_vertex_errors)
-                
-                # Compute overall visibility mask
-                overall_visibility_mask = np.any(all_vertex_visibility, axis=0)
-
-                all_results[method]['mean_vertex_errors'] = mean_vertex_errors
-                all_results[method]['vertex_visibility_mask'] = overall_visibility_mask
-        
-        def convert_to_serializable(obj):
-            if isinstance(obj, np.integer):
-                return int(obj)
-            elif isinstance(obj, np.floating):
-                return float(obj)
-            elif isinstance(obj, np.ndarray):
-                return obj.tolist()
-            return obj
-
-        # Convert all_results to serializable format
-        all_results_serializable = {
-            method: {k: convert_to_serializable(v) for k, v in metrics.items()}
-            for method, metrics in all_results.items()
-        }
-
-        # Convert sequence_results to serializable format
-        sequence_results_serializable = {
-            seq: {
-                method: {k: convert_to_serializable(v) for k, v in metrics.items()}
-                for method, metrics in methods_data.items()
-            }
-            for seq, methods_data in sequence_results.items()
-        }
-
-        # Save all results to a JSON file
-        with open(os.path.join(result_root, 'all_results.json'), 'w') as f:
-            json.dump(all_results_serializable, f, indent=2)
-
-        # Save individual sequence results to a JSON file
-        with open(os.path.join(result_root, 'sequence_results.json'), 'w') as f:
-            json.dump(sequence_results_serializable, f, indent=2)
-
-        # After processing all sequences, save accumulated data
-        self.save_accumulated_data(result_root)
-
+        print(self.to_pretty_string([all_results[method] for method in methods], methods))
+    
+        # Save results
+        self.save_results(result_root, all_results, sequence_results)
+    
         return all_results, sequence_results
+
+    def save_results(self, result_root, all_results, sequence_results):
+        """Save results for later visualization."""
+        output_file = os.path.join(result_root, "evaluation_results.npz")
+        
+        np.savez_compressed(output_file,
+                            all_results=json.dumps(all_results),
+                            sequence_results=json.dumps(sequence_results))
+        
+        print(f"Results saved to {output_file}")
 
