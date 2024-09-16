@@ -6,7 +6,6 @@ from aitviewer.renderables.smpl import SMPLSequence
 from aitviewer.utils import local_to_global
 
 SMPL_OR_JOINTS = np.array([0, 1, 2, 4, 5, 16, 17, 18, 19])
-import numpy as np
 
 def compute_mean_vertex_errors(vertex_errors, vertex_visibility):
     """
@@ -14,24 +13,24 @@ def compute_mean_vertex_errors(vertex_errors, vertex_visibility):
     
     Parameters:
     - vertex_errors: numpy array of shape (n_frames, n_vertices) containing the error for each vertex in each frame
-    - vertex_visibility: boolean numpy array of shape (n_frames, n_vertices) indicating which vertices are visible in each frame
+    - vertex_visibility: list of lists, where each inner list contains indices of visible vertices for that frame
     
     Returns:
     - mean_errors: numpy array of shape (n_vertices,) containing the mean error for each vertex
-    - visibility_mask: boolean numpy array of shape (n_vertices,) indicating which vertices were visible at least once
+    - visibility_count: numpy array of shape (n_vertices,) containing the count of visibility for each vertex
     """
+    n_frames, n_vertices = vertex_errors.shape
+    error_sum = np.zeros(n_vertices)
+    visibility_count = np.zeros(n_vertices, dtype=int)
     
-    # Compute the mean error for each vertex, considering only visible frames
-    visible_errors = np.where(vertex_visibility, vertex_errors, np.nan)
-    mean_errors = np.nanmean(visible_errors, axis=0)
+    for i in range(n_frames):
+        visible_indices = vertex_visibility[i]
+        error_sum[visible_indices] += vertex_errors[i, visible_indices]
+        visibility_count[visible_indices] += 1
     
-    # Create a mask for vertices that were visible at least once
-    visibility_mask = np.any(vertex_visibility, axis=0)
+    mean_errors = np.where(visibility_count > 0, error_sum / visibility_count, 0)
     
-    # Set mean error to NaN for vertices that were never visible
-    mean_errors[~visibility_mask] = np.nan
-    
-    return mean_errors, visibility_mask
+    return mean_errors, visibility_count
 
 def get_data(
     pose_gt,
@@ -237,6 +236,10 @@ def compute_positional_errors(pred_joints, gt_joints, pred_verts, gt_verts, visi
     errors_jps, errors_pa_jps = [], []
     errors_verts, errors_pa_verts = [], []
     proc_rot = []
+    
+    n_frames = len(gt_joints)
+    n_vertices = gt_verts[0].shape[0]
+    vertex_errors = np.zeros((n_frames, n_vertices))
 
     for i, (gt3d_jps, pd3d_jps) in enumerate(zip(gt_joints, pred_joints)):
         gt3d_jps = gt3d_jps.reshape(-1, 3)
@@ -252,13 +255,16 @@ def compute_positional_errors(pred_joints, gt_joints, pred_verts, gt_verts, visi
 
         visible_joints_idx = visible_joints[i]
         if len(visible_joints_idx) == 0:
-            visible_idx = [15]
+            visible_joints_idx = [15]
         joint_error = np.sqrt(np.sum((gt3d_jps[visible_joints_idx] - pd3d_jps[visible_joints_idx]) ** 2, axis=1))
         errors_jps.append(np.mean(joint_error))
 
         visible_verts_idx = visible_vertices[i]
         verts_error = np.sqrt(np.sum((gt3d_verts[visible_verts_idx] - pd3d_verts[visible_verts_idx]) ** 2, axis=1))
         errors_verts.append(np.mean(verts_error))
+        
+        # Store vertex errors for all vertices (will be masked later)
+        vertex_errors[i] = np.sqrt(np.sum((gt3d_verts - pd3d_verts) ** 2, axis=1))
 
         pd3d_jps_sym, pd3d_verts_sym, procrustesParam = compute_similarity_transform(
             pd3d_jps, gt3d_jps, num_joints, pd3d_verts
@@ -271,6 +277,9 @@ def compute_positional_errors(pred_joints, gt_joints, pred_verts, gt_verts, visi
         errors_pa_jps.append(np.mean(pa_jps_error))
         errors_pa_verts.append(np.mean(pa_verts_error))
 
+    # Compute mean vertex errors and visibility count
+    mean_vertex_errors, vertex_visibility_count = compute_mean_vertex_errors(vertex_errors, visible_vertices)
+
     result_dict = {
         "mpjpe": np.mean(errors_jps),
         "mpjpe_pa": np.mean(errors_pa_jps),
@@ -281,6 +290,8 @@ def compute_positional_errors(pred_joints, gt_joints, pred_verts, gt_verts, visi
         "mpjpe_pf_pa": np.stack(errors_pa_jps, 0),
         "mve_pf": np.stack(errors_verts, 0),
         "mve_pf_pa": np.stack(errors_pa_verts, 0),
+        "mean_vertex_errors": mean_vertex_errors,
+        "vertex_visibility_count": vertex_visibility_count
     }
 
     return result_dict
@@ -326,15 +337,15 @@ def compute_metrics(
 
     # Compute vertex errors
     # Compute vertex errors
-    vertex_errors = np.sqrt(np.sum((gt_verts - pred_verts) ** 2, axis=-1))  # (N_frames, N_vertices)
+    ##vertex_errors = np.sqrt(np.sum((gt_verts - pred_verts) ** 2, axis=-1))  # (N_frames, N_vertices)
     
     # Create a mask for visible vertices
-    n_frames, n_vertices = vertex_errors.shape
-    vertex_visibility = np.zeros((n_frames, n_vertices), dtype=bool)
-    for i, visible in enumerate(visible_vertices):
-        vertex_visibility[i, visible] = True
+    #n_frames, n_vertices = vertex_errors.shape
+    #vertex_visibility = np.zeros((n_frames, n_vertices), dtype=bool)
+    #for i, visible in enumerate(visible_vertices):
+    #    vertex_visibility[i, visible] = True
 
-    mean_vertex_errors, vertex_visibility_mask = compute_mean_vertex_errors(vertex_errors, vertex_visibility)
+    #mean_vertex_errors, vertex_visibility_mask = compute_mean_vertex_errors(vertex_errors, vertex_visibility)
 
     # These are all scalars. Choose nice names for pretty printing later.
     metrics = {
@@ -361,10 +372,8 @@ def compute_metrics(
         "jitter_gt_std": jkt_std,  # Scalar
         "visible_joints": visible_joints,
         "visible_vertices": visible_vertices,
-        "vertex_errors": vertex_errors,
-        "vertex_visibility": vertex_visibility,
-        "mean_vertex_errors": mean_vertex_errors,
-        "vertex_visibility_mask": vertex_visibility_mask
+        "mean_vertex_errors": pos_errors["mean_vertex_errors"],
+        "vertex_visibility_count": pos_errors["vertex_visibility_count"]
     }
 
     return metrics, metrics_extra
