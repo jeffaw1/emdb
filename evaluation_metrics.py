@@ -28,10 +28,11 @@ def compute_mean_vertex_errors(vertex_errors, vertex_visibility):
         error_sum[visible_indices] += vertex_errors[i, visible_indices]
         visibility_count[visible_indices] += 1
     
-    mean_errors = np.where(visibility_count > 0, error_sum / visibility_count, 0)
+    # Use np.divide with 'where' parameter to avoid division by zero
+    mean_errors = np.divide(error_sum, visibility_count, out=np.zeros_like(error_sum), where=visibility_count!=0)
     
     return mean_errors, visibility_count
-
+    
 def get_data(
     pose_gt,
     shape_gt,
@@ -358,7 +359,8 @@ def compute_metrics(
         "Jitter [km/s^3]": jkp_mean,
     }
     #mean_errors, visibility_mask = compute_mean_vertex_errors(metrics_extra['vertex_errors'], metrics_extra['vertex_visibility'])
-
+    print('HERERE pos_errors["mean_vertex_errors"]', pos_errors["mean_vertex_errors"].shape)
+    print('pos_errors["vertex_visibility_count"]', pos_errors["vertex_visibility_count"].shape)
     metrics_extra = {
         "mpjpe_all": pos_errors["mpjpe_pf"],  # (N,)
         "mpjpe_pa_all": pos_errors["mpjpe_pf_pa"],  # (N,)
@@ -377,3 +379,4 @@ def compute_metrics(
     }
 
     return metrics, metrics_extra
+
