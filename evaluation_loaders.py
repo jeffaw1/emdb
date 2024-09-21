@@ -13,7 +13,7 @@ def load_hybrik(result_root, force_load):
     """Load HybrIK results."""
     hybrik_dir = result_root
     hybrik_cache_dir = os.path.join(hybrik_dir, "cache")
-    hybrik_cache_file = os.path.join(hybrik_cache_dir, "romp-out.npz")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "romp-out2.npz")
 
     if not os.path.exists(hybrik_cache_file) or force_load:
         hybrik_betas, hybrik_poses_rot, hybrik_trans = [], [], []
@@ -58,7 +58,7 @@ import pickle as pkl
 def load_scoreHMR(result_root, force_load=False):
     """Load scoreHMR results."""
     hybrik_cache_dir = os.path.join(result_root, "cache")
-    hybrik_cache_file = os.path.join(hybrik_cache_dir, "scoreHMR_out.npz")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "scoreHMR_out2.npz")
     print('result_root', result_root)
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
@@ -94,7 +94,7 @@ def load_scoreHMR(result_root, force_load=False):
 def load_niki(result_root, force_load=False):
     """Load scoreHMR results."""
     hybrik_cache_dir = os.path.join(result_root, "cache")
-    hybrik_cache_file = os.path.join(hybrik_cache_dir, "niki_out.npz")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "niki_out2.npz")
     print('result_root', result_root)
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
@@ -129,7 +129,7 @@ def load_niki(result_root, force_load=False):
 def load_tram(result_root, force_load=False):
     """Load scoreHMR results."""
     hybrik_cache_dir = os.path.join(result_root, "cache")
-    hybrik_cache_file = os.path.join(hybrik_cache_dir, "tram_out.npz")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "tram_out2.npz")
     print('result_root', result_root)
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
@@ -164,7 +164,7 @@ def load_tram(result_root, force_load=False):
 def load_pliks(result_root, force_load=False):
     """Load scoreHMR results."""
     hybrik_cache_dir = os.path.join(result_root, "cache")
-    hybrik_cache_file = os.path.join(hybrik_cache_dir, "pliks_out.npz")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "pliks_out2.npz")
     print('result_root', result_root)
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
@@ -199,7 +199,7 @@ def load_pliks(result_root, force_load=False):
 def load_nlf(result_root, force_load=False):
     """Load scoreHMR results."""
     hybrik_cache_dir = os.path.join(result_root, "cache")
-    hybrik_cache_file = os.path.join(hybrik_cache_dir, "nlf_out.npz")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "nlf_out2.npz")
     print('result_root', result_root)
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
@@ -272,7 +272,7 @@ def load_nlfs(result_root, force_load=False):
 def load_PartialHuman(result_root, force_load=False):
     """Load scoreHMR results."""
     hybrik_cache_dir = os.path.join(result_root, "cache")
-    hybrik_cache_file = os.path.join(hybrik_cache_dir, "partialh_out.npz")
+    hybrik_cache_file = os.path.join(hybrik_cache_dir, "partialh_out2.npz")
     print('result_root', result_root)
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
