@@ -282,7 +282,7 @@ def load_PartialHuman(result_root, force_load=False):
             with open(pkl_file, 'rb') as f:
                 frame_data = pkl.load(f, encoding='latin1', fix_imports=True)
             # Extract theta parameters
-            theta = data['theta'][0]  # Assuming theta is stored for a single frame
+            theta = frame_data['theta'][0]  # Assuming theta is stored for a single frame
         
             # Extract camera, pose, and shape parameters from theta
             num_cam = 3  # Number of camera parameters
@@ -294,8 +294,8 @@ def load_PartialHuman(result_root, force_load=False):
             shape_params = theta[num_cam+num_pose:]
         
             # Prepare parameters for SMPL
-            poses = torch.tensor(pose_params.reshape(1, -1)).float()
-            betas = torch.tensor(shape_params.reshape(1, -1)).float()
+            poses = np.array(pose_params.reshape(1, -1))
+            betas = np.array(shape_params.reshape(1, -1))
             global_orient = poses[:, :3]
             body_pose = poses[:, 3:]
 
@@ -321,4 +321,6 @@ def load_PartialHuman(result_root, force_load=False):
         trans_hat = hybrik_results["trans_hat"]
     
     return pose_hat, shape_hat, trans_hat
+
+
 
