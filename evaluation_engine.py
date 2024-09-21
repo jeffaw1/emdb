@@ -22,7 +22,7 @@ TRAM = "Tram"
 NLF = 'NLF'
 NLFs = 'NLFs'
 PLIKS = 'pliks'
-PartialHuman = 'PartialHuman
+PartialHuman = 'PartialHuman'
 
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
