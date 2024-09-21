@@ -278,9 +278,10 @@ def load_PartialHuman(result_root, force_load=False):
         pose_hat, shape_hat, trans_hat = [], [], []
         
         for pkl_file in sorted(glob.glob(os.path.join(result_root, "*.pkl"))):
-            with open(pkl_file, "rb") as f:
-                frame_data = pkl.load(f)
-            
+            #print('pkl_file=',pkl_file)
+            with open(pkl_file, 'rb') as f:
+                frame_data = pkl.load(f, encoding='latin1', fix_imports=True)
+
             pose_hat.append(np.concatenate([frame_data['poses_root'], frame_data['poses_body']], axis=1))
             shape_hat.append(frame_data['betas'])
             trans_hat.append(frame_data['trans'])
@@ -303,3 +304,4 @@ def load_PartialHuman(result_root, force_load=False):
         trans_hat = hybrik_results["trans_hat"]
     
     return pose_hat, shape_hat, trans_hat
+
