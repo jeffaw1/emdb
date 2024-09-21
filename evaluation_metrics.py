@@ -74,6 +74,11 @@ def get_data(
         smpl_layer_hat = SMPLLayer(model_type="smpl", gender=gender_hat)
     else:
         smpl_layer_hat = smpl_layer
+    if shape_hat is None:
+        verts_pred = pose_hat
+        jp_pred = None
+        glb_rot_mats_pred = None
+        return jp_pred, jp_gt, glb_rot_mats_pred, glb_rot_mats_gt, verts_pred, verts_gt
 
     smpl_seq_hat = SMPLSequence(
         pose_hat[:, 3:],
@@ -316,6 +321,9 @@ def compute_metrics(
     pred_joints, gt_joints, pred_mats, gt_mats, pred_verts, gt_verts = get_data(
         pose_gt, shape_gt, trans_gt, pose_hat, shape_hat, trans_hat, gender_gt, gender_hat,
     )
+    if pred_joints is None:
+        pred_joints = gt_joints
+        trans_hat = trans_gt
 
     if camera_pose_gt is not None:
         gt_joints, gt_mats = apply_camera_transforms(gt_joints, gt_mats, camera_pose_gt)
