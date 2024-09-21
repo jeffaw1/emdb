@@ -324,3 +324,40 @@ def load_PartialHuman(result_root, force_load=False):
 
 
 
+import os
+import glob
+import numpy as np
+import pickle as pkl
+
+def load_smplerx_vertices(result_root, force_load=False):
+    """Load SMPL-X vertices from PKL files."""
+    vertices_cache_dir = os.path.join(result_root, "cache")
+    vertices_cache_file = os.path.join(vertices_cache_dir, "vertices_out.npz")
+    print('result_root', result_root)
+
+    if not os.path.exists(vertices_cache_file) or force_load:
+        vertices_list = []
+        
+        for pkl_file in sorted(glob.glob(os.path.join(result_root, "*.pkl"))):
+            with open(pkl_file, "rb") as f:
+                frame_data = pkl.load(f)
+            
+            # Assuming the vertices are stored under the key 'vertices' in the PKL file
+            # Adjust this key if your PKL files use a different key for vertices
+            vertices = frame_data['vertices']
+            vertices_list.append(vertices)
+        
+        # Stack all vertices into a single numpy array
+        vertices_array = np.stack(vertices_list, axis=0)  # Shape: (N_frames, N_vertices, 3)
+        
+        os.makedirs(vertices_cache_dir, exist_ok=True)
+        np.savez_compressed(
+            vertices_cache_file,
+            vertices=vertices_array
+        )
+    else:
+        vertices_data = np.load(vertices_cache_file)
+        vertices_array = vertices_data["vertices"]
+    
+    return vertices_array, None, None
+
