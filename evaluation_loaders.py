@@ -358,6 +358,7 @@ def load_smplerx_vertices(result_root, force_load=False):
     else:
         vertices_data = np.load(vertices_cache_file)
         vertices_array = vertices_data["vertices"]
+        
+    vertices_array = vertices_array.squeeze()
     
     return vertices_array, None, None
-
