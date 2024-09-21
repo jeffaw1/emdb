@@ -10,7 +10,7 @@ import json
 import numpy as np
 from tabulate import tabulate
 
-from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf, load_nlfs, load_pliks, load_PartialHuman
+from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf, load_nlfs, load_pliks, load_PartialHuman, load_smplerx_vertices
 
 from configuration import SHOT_TYPE
 
@@ -23,6 +23,7 @@ NLF = 'NLF'
 NLFs = 'NLFs'
 PLIKS = 'pliks'
 PartialHuman = 'PartialHuman'
+SMPLERX = 'smplerx'
 
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
@@ -32,7 +33,8 @@ METHOD_TO_RESULT_FOLDER = {
     NLF: 'NLF',
     PLIKS: 'pliks',
     NLFs: 'NLF/smoothnet_windowsize32_smoothed',
-    PartialHuman: 'partial_human'
+    PartialHuman: 'partial_human',
+    SMPLERX : 'smpl'
 }
 
 METHOD_TO_LOAD_FUNCTION = {
@@ -44,6 +46,7 @@ METHOD_TO_LOAD_FUNCTION = {
     NLFs: load_nlfs,
     PLIKS: load_pliks,
     PartialHuman: load_PartialHuman,
+    SMPLERX: load_smplerx_vertices,
 }
 
 
@@ -108,7 +111,7 @@ class EvaluationEngine(object):
 
     def get_gender_for_baseline(self, method):
         """Which gender to use for the baseline method."""
-        if method in [HYBRIK, SCOREHMR, NIKI, TRAM, NLF, PLIKS, NLFs, PartialHuman]:
+        if method in [SMPLERX, HYBRIK, SCOREHMR, NIKI, TRAM, NLF, PLIKS, NLFs, PartialHuman]:
             return "neutral"
         else:
             # This will select whatever gender the ground-truth specifies.
@@ -158,7 +161,7 @@ class EvaluationEngine(object):
         
     def save_detailed_results(self, result_root, all_results, sequence_results):
         """Save detailed results for later visualization."""
-        output_file = os.path.join(result_root, "detailed_results.npz")
+        output_file = os.path.join(result_root, "detailed_results3.npz")
         
         # Convert numpy arrays to lists for JSON serialization
         json_compatible_results = {}
@@ -285,7 +288,7 @@ class EvaluationEngine(object):
 
     def save_results(self, result_root, all_results, sequence_results):
         """Save results for later visualization."""
-        output_file = os.path.join(result_root, "evaluation_results.npz")
+        output_file = os.path.join(result_root, "evaluation_results3.npz")
         
         # Convert numpy arrays to lists for JSON serialization
         json_compatible_results = {}
