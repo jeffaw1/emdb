@@ -281,9 +281,26 @@ def load_PartialHuman(result_root, force_load=False):
             #print('pkl_file=',pkl_file)
             with open(pkl_file, 'rb') as f:
                 frame_data = pkl.load(f, encoding='latin1', fix_imports=True)
+            # Extract theta parameters
+            theta = data['theta'][0]  # Assuming theta is stored for a single frame
+        
+            # Extract camera, pose, and shape parameters from theta
+            num_cam = 3  # Number of camera parameters
+            num_pose = 72  # 24 joints * 3 (rotation angles)
+            num_shape = 10  # Number of shape parameters
+        
+            cam_params = theta[:num_cam]
+            pose_params = theta[num_cam:num_cam+num_pose]
+            shape_params = theta[num_cam+num_pose:]
+        
+            # Prepare parameters for SMPL
+            poses = torch.tensor(pose_params.reshape(1, -1)).float()
+            betas = torch.tensor(shape_params.reshape(1, -1)).float()
+            global_orient = poses[:, :3]
+            body_pose = poses[:, 3:]
 
-            pose_hat.append(np.concatenate([frame_data['poses_root'], frame_data['poses_body']], axis=1))
-            shape_hat.append(frame_data['betas'])
+            pose_hat.append(np.concatenate([global_orient, body_pose], axis=1))
+            shape_hat.append(betas)
             trans_hat.append(frame_data['trans'])
         
         pose_hat = np.concatenate(pose_hat, axis=0)  # Shape: (N, 72)
