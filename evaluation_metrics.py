@@ -321,28 +321,44 @@ def compute_metrics(
     pred_joints, gt_joints, pred_mats, gt_mats, pred_verts, gt_verts = get_data(
         pose_gt, shape_gt, trans_gt, pose_hat, shape_hat, trans_hat, gender_gt, gender_hat,
     )
+    print('HIIIII')
+    print(pred_verts.shape)
+    print(gt_verts.shape)
     if pred_joints is None:
         pred_joints = gt_joints
         trans_hat = trans_gt
+        pred_mats = gt_mats
+        if camera_pose_gt is not None:
+            gt_joints, gt_mats = apply_camera_transforms(gt_joints, gt_mats, camera_pose_gt)
+            gt_verts, _ = apply_camera_transforms(gt_verts, gt_mats, camera_pose_gt)
 
-    if camera_pose_gt is not None:
-        gt_joints, gt_mats = apply_camera_transforms(gt_joints, gt_mats, camera_pose_gt)
-        gt_verts, _ = apply_camera_transforms(gt_verts, gt_mats, camera_pose_gt)
+        pos_errors = compute_positional_errors(
+            pred_joints * 1000.0, gt_joints * 1000.0, pred_verts * 1000.0, gt_verts * 1000.0,
+            visible_vertices, visible_joints
+        )
+        mats_pred_prc = np.nan
+        mpjae_pa_final, all_angles_pa = np.nan, np.nan
+        mpjae_final, all_angles = np.nan, np.nan
+        jkp_mean, jkp_std, jkt_mean, jkt_std = np.nan, np.nan, np.nan, np.nan
+    else:
+        if camera_pose_gt is not None:
+            gt_joints, gt_mats = apply_camera_transforms(gt_joints, gt_mats, camera_pose_gt)
+            gt_verts, _ = apply_camera_transforms(gt_verts, gt_mats, camera_pose_gt)
 
-    pos_errors = compute_positional_errors(
-        pred_joints * 1000.0, gt_joints * 1000.0, pred_verts * 1000.0, gt_verts * 1000.0,
-        visible_vertices, visible_joints
-    )
+        pos_errors = compute_positional_errors(
+            pred_joints * 1000.0, gt_joints * 1000.0, pred_verts * 1000.0, gt_verts * 1000.0,
+            visible_vertices, visible_joints
+        )
 
-    mats_procs_exp = np.expand_dims(pos_errors["mat_procs"], 1)
-    mats_procs_exp = np.tile(mats_procs_exp, (1, len(SMPL_OR_JOINTS), 1, 1))
-    mats_pred_prc = np.matmul(mats_procs_exp, pred_mats)
+        mats_procs_exp = np.expand_dims(pos_errors["mat_procs"], 1)
+        mats_procs_exp = np.tile(mats_procs_exp, (1, len(SMPL_OR_JOINTS), 1, 1))
+        mats_pred_prc = np.matmul(mats_procs_exp, pred_mats)
 
-    mpjae_pa_final, all_angles_pa = joint_angle_error(mats_pred_prc, gt_mats)
+        mpjae_pa_final, all_angles_pa = joint_angle_error(mats_pred_prc, gt_mats)
 
-    mpjae_final, all_angles = joint_angle_error(pred_mats, gt_mats)
+        mpjae_final, all_angles = joint_angle_error(pred_mats, gt_mats)
 
-    jkp_mean, jkp_std, jkt_mean, jkt_std = compute_jitter(pred_joints, gt_joints, visible_joints)
+        jkp_mean, jkp_std, jkt_mean, jkt_std = compute_jitter(pred_joints, gt_joints, visible_joints)
 
     # Compute vertex errors
     # Compute vertex errors
@@ -387,3 +403,4 @@ def compute_metrics(
     }
 
     return metrics, metrics_extra
+
