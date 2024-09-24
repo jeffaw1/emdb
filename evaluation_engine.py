@@ -10,7 +10,7 @@ import json
 import numpy as np
 from tabulate import tabulate
 
-from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf, load_nlfs, load_pliks, load_PartialHuman, load_smplerx_vertices
+from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf,load_nlf1,load_nlf2, load_nlfs, load_pliks, load_PartialHuman, load_smplerx_vertices
 
 from configuration import SHOT_TYPE
 
@@ -21,6 +21,8 @@ NIKI = "Niki"
 TRAM = "Tram"
 NLF = 'NLF'
 NLFs = 'NLFs'
+NLF1 = 'NLF*'
+NLF2 = 'NLF**'
 PLIKS = 'pliks'
 PartialHuman = 'PartialHuman'
 SMPLERX = 'smplerx'
@@ -31,6 +33,8 @@ METHOD_TO_RESULT_FOLDER = {
     NIKI: "Niki",
     TRAM: "Tram",
     NLF: 'NLF',
+    NLF1: 'NLF*',
+    NLF2: 'NLF**',
     PLIKS: 'pliks',
     NLFs: 'NLF/smoothnet_windowsize32_smoothed',
     PartialHuman: 'partial_human',
@@ -43,6 +47,8 @@ METHOD_TO_LOAD_FUNCTION = {
     NIKI: load_niki,
     TRAM: load_tram,
     NLF: load_nlf,
+    NLF1: load_nlf1,
+    NLF2: load_nlf2,
     NLFs: load_nlfs,
     PLIKS: load_pliks,
     PartialHuman: load_PartialHuman,
