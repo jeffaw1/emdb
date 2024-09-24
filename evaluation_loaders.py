@@ -267,7 +267,8 @@ def load_nlfs(result_root, force_load=False):
         trans_hat = hybrik_results["trans_hat"]
     
     return pose_hat, shape_hat, trans_hat
-def load_nlf1(result_root, force_load=False):
+
+def load_nlf2(result_root, force_load=False):
     """Load scoreHMR results."""
     #result_root = os.path.join(result_root, "smoothnet_windowsize32_smoothed")
     #print('result_root:::', result_root)
@@ -277,7 +278,16 @@ def load_nlf1(result_root, force_load=False):
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
         
-        for pkl_file in sorted(glob.glob(os.path.join(result_root, "*.pkl"))):
+        # Assuming result_root is the full path including the folder name you want to match exactly
+        target_folder = os.path.basename(result_root)
+
+        for pkl_file in sorted(glob.glob(os.path.join(result_root, "*.pkl"))):            
+            # Check if the parent folder of the pkl_file matches the target folder exactly
+            if os.path.basename(os.path.dirname(pkl_file)) != target_folder:
+                continue  # Skip this file if the folder doesn't match exactly
+            print('pkl_file', pkl_file)
+            print(target_folder)
+
             with open(pkl_file, "rb") as f:
                 frame_data = pkl.load(f)
             
@@ -303,6 +313,7 @@ def load_nlf1(result_root, force_load=False):
         trans_hat = hybrik_results["trans_hat"]
     
     return pose_hat, shape_hat, trans_hat
+    
 def load_nlf2(result_root, force_load=False):
     """Load scoreHMR results."""
     #result_root = os.path.join(result_root, "smoothnet_windowsize32_smoothed")
@@ -313,7 +324,16 @@ def load_nlf2(result_root, force_load=False):
     if not os.path.exists(hybrik_cache_file) or force_load:
         pose_hat, shape_hat, trans_hat = [], [], []
         
-        for pkl_file in sorted(glob.glob(os.path.join(result_root, "*.pkl"))):
+        # Assuming result_root is the full path including the folder name you want to match exactly
+        target_folder = os.path.basename(result_root)
+
+        for pkl_file in sorted(glob.glob(os.path.join(result_root, "*.pkl"))):            
+            # Check if the parent folder of the pkl_file matches the target folder exactly
+            if os.path.basename(os.path.dirname(pkl_file)) != target_folder:
+                continue  # Skip this file if the folder doesn't match exactly
+            print('pkl_file', pkl_file)
+            print(target_folder)
+
             with open(pkl_file, "rb") as f:
                 frame_data = pkl.load(f)
             
@@ -433,3 +453,4 @@ def load_smplerx_vertices(result_root, force_load=False):
     vertices_array = vertices_array.squeeze()
     
     return vertices_array, None, None
+
