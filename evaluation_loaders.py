@@ -286,7 +286,7 @@ def load_nlf1(result_root, force_load=False):
             if os.path.basename(os.path.dirname(pkl_file)) != target_folder:
                 continue  # Skip this file if the folder doesn't match exactly
             #print('pkl_file', pkl_file)
-            print(target_folder)
+            #print(target_folder)
 
             with open(pkl_file, "rb") as f:
                 frame_data = pkl.load(f)
@@ -332,7 +332,7 @@ def load_nlf2(result_root, force_load=False):
             if os.path.basename(os.path.dirname(pkl_file)) != target_folder:
                 continue  # Skip this file if the folder doesn't match exactly
             #print('pkl_file', pkl_file)
-            print(target_folder)
+            #print(target_folder)
 
             with open(pkl_file, "rb") as f:
                 frame_data = pkl.load(f)
@@ -453,3 +453,4 @@ def load_smplerx_vertices(result_root, force_load=False):
     vertices_array = vertices_array.squeeze()
     
     return vertices_array, None, None
+
