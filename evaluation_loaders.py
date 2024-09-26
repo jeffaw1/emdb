@@ -435,7 +435,7 @@ def load_smplerx_vertices(result_root, force_load=False):
             
             # Assuming the vertices are stored under the key 'vertices' in the PKL file
             # Adjust this key if your PKL files use a different key for vertices
-            vertices = frame_data['vertices']
+            vertices = frame_data['vertices_smpl']
             vertices_list.append(vertices)
         
         # Stack all vertices into a single numpy array
