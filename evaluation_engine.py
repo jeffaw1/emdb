@@ -294,7 +294,7 @@ class EvaluationEngine(object):
 
     def save_results(self, result_root, all_results, sequence_results):
         """Save results for later visualization."""
-        output_file = os.path.join(result_root, "evaluation_results3.npz")
+        output_file = os.path.join(result_root, "evaluation_results4.npz")
         
         # Convert numpy arrays to lists for JSON serialization
         json_compatible_results = {}
