@@ -295,9 +295,20 @@ class EvaluationEngine(object):
 
         return all_results, sequence_results
 
+    import os
+    import json
+    import numpy as np
+    
     def save_results(self, result_root, all_results, sequence_results):
         """Save results for later visualization."""
-        output_file = os.path.join(result_root, "evaluation_results4.npz")
+        
+        # Create output directory if it doesn't exist
+        if not os.path.exists(result_root):
+            os.makedirs(result_root)
+    
+        # Output paths for the npz and json files
+        npz_output_file = os.path.join(result_root, "evaluation_results04_10.npz")
+        json_output_file = os.path.join(result_root, "sequence_results04_10.json")
         
         # Convert numpy arrays to lists for JSON serialization
         json_compatible_results = {}
@@ -307,11 +318,15 @@ class EvaluationEngine(object):
                 for k, v in data.items()
             }
         
-        np.savez_compressed(output_file,
-                            all_results=json.dumps(json_compatible_results),
-                            sequence_results=json.dumps(sequence_results))
+        # Save all_results to a compressed npz file
+        np.savez_compressed(npz_output_file, all_results=json.dumps(json_compatible_results))
         
-        print(f"Results saved to {output_file}")
-
+        # Save sequence_results to a JSON file
+        with open(json_output_file, 'w') as json_file:
+            json.dump(sequence_results, json_file)
+        
+        print(f"Results saved to {npz_output_file} and {json_output_file}")
+    
+    
 
 
