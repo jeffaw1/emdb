@@ -271,7 +271,7 @@ def compute_positional_errors(pred_joints, gt_joints, pred_verts, gt_verts, visi
         errors_verts.append(np.mean(verts_error))
         
         # Store vertex errors for all vertices (will be masked later)
-        vertex_errors[i] = np.sqrt(np.sum((gt3d_verts - pd3d_verts) ** 2, axis=1))
+        #vertex_errors[i] = np.sqrt(np.sum((gt3d_verts - pd3d_verts) ** 2, axis=1))
 
         pd3d_jps_sym, pd3d_verts_sym, procrustesParam = compute_similarity_transform(
             pd3d_jps, gt3d_jps, num_joints, pd3d_verts
@@ -280,7 +280,8 @@ def compute_positional_errors(pred_joints, gt_joints, pred_verts, gt_verts, visi
 
         pa_jps_error = np.sqrt(np.sum((gt3d_jps[visible_joints_idx] - pd3d_jps_sym[visible_joints_idx]) ** 2, axis=1))
         pa_verts_error = np.sqrt(np.sum((gt3d_verts[visible_verts_idx] - pd3d_verts_sym[visible_verts_idx]) ** 2, axis=1))
-
+        vertex_errors[i] = np.sqrt(np.sum((gt3d_verts - pd3d_verts_sym) ** 2, axis=1))
+        
         errors_pa_jps.append(np.mean(pa_jps_error))
         errors_pa_verts.append(np.mean(pa_verts_error))
 
