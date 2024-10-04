@@ -10,13 +10,14 @@ import json
 import numpy as np
 from tabulate import tabulate
 
-from evaluation_loaders import load_hybrik, load_scoreHMR, load_niki, load_tram, load_nlf,load_nlf1,load_nlf2, load_nlfs, load_pliks, load_PartialHuman, load_smplerx_vertices
+from evaluation_loaders import load_hybrik, load_scoreHMR, load_HMR2, load_niki, load_tram, load_nlf,load_nlf1,load_nlf2, load_nlfs, load_pliks, load_PartialHuman, load_smplerx_vertices
 
 from configuration import SHOT_TYPE
 
 
 HYBRIK = "HybrIK"
 SCOREHMR = "scoreHMR"
+HMR2 = "HMR2"
 NIKI = "Niki"
 TRAM = "Tram"
 NLF = 'NLF'
@@ -30,6 +31,7 @@ SMPLERX = 'smplerx'
 METHOD_TO_RESULT_FOLDER = {
     HYBRIK: "hybrIK-out",
     SCOREHMR: "ScoreHMR2",
+    HMR2: "ScoreHMR2/hmr2",
     NIKI: "Niki",
     TRAM: "Tram",
     NLF: 'NLF',
@@ -44,6 +46,7 @@ METHOD_TO_RESULT_FOLDER = {
 METHOD_TO_LOAD_FUNCTION = {
     HYBRIK: load_hybrik,
     SCOREHMR: load_scoreHMR,
+    HMR2: load_HMR2,
     NIKI: load_niki,
     TRAM: load_tram,
     NLF: load_nlf,
