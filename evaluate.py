@@ -8,7 +8,7 @@ import pickle as pkl
 import json
 
 from configuration import EMDB_ROOT
-from evaluation_engine import HYBRIK, SCOREHMR, NIKI, TRAM, NLF, NLF1, NLF2, NLFs, PLIKS, PartialHuman, EvaluationEngine
+from evaluation_engine import HYBRIK, SCOREHMR, NIKI, TRAM, NLF, NLF1, NLF2, NLFs, PLIKS, PartialHuman, HMR2, EvaluationEngine
 from evaluation_metrics import compute_metrics
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         emdb1_sequence_roots.append(os.path.dirname(emdb_pkl_file))
 
     # Select the baselines we want to evaluate.
-    baselines_to_evaluate = [SCOREHMR, NIKI, TRAM, NLF, NLF1 ,NLF2 , PLIKS, PartialHuman]
+    baselines_to_evaluate = [SCOREHMR, NIKI, TRAM, NLF, HMR2 ,NLF2, PartialHuman]
 
     # Run the evaluation.
     evaluator_public = EvaluationEngine(compute_metrics)
