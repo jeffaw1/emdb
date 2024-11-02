@@ -10,7 +10,7 @@ import json
 import numpy as np
 from tabulate import tabulate
 
-from evaluation_loaders import load_hybrik, load_scoreHMR, load_HMR2, load_niki, load_tram, load_nlf,load_nlf1,load_nlf2, load_nlfs, load_pliks, load_PartialHuman, load_smplerx_vertices
+from evaluation_loaders import load_hybrik, load_scoreHMR, load_HMR2, load_niki, load_tram, load_nlf, load_nlf1, load_nlf2, load_nlfs, load_pliks, load_PartialHuman, load_smplerx_vertices
 
 from configuration import SHOT_TYPE
 
