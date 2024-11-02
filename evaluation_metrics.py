@@ -4,6 +4,7 @@ import torch
 from aitviewer.models.smpl import SMPLLayer
 from aitviewer.renderables.smpl import SMPLSequence
 from aitviewer.utils import local_to_global
+from configuration import ID_LEFT, ID_RIGTH
 
 SMPL_OR_JOINTS = np.array([0, 1, 2, 4, 5, 16, 17, 18, 19])
 
@@ -104,8 +105,10 @@ def get_data(
 
 def align_by_pelvis(joints, verts=None):
     """Align the SMPL joints and vertices by the pelvis."""
-    left_id = 1
-    right_id = 2
+    #left_id = 1
+    #right_id = 2
+    left_id = ID_LEFT
+    right_id = ID_RIGTH
 
     pelvis = (joints[left_id, :] + joints[right_id, :]) / 2.0
     if verts is not None:
