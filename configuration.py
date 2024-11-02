@@ -7,8 +7,8 @@ import numpy as np
 
 SHOT_TYPE = "close_up"
 
-align_left_id = 1
-align_right_id = 2
+ID_LEFT = 1
+ID_RIGTH = 2
 
 # TODO update paths to match your setup
 EMDB_ROOT = f"/content/drive/MyDrive/EMDB/test_cropped_subset_dataset_min_512/{SHOT_TYPE}"
