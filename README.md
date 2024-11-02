@@ -4,6 +4,8 @@ _Official Repository for the ICCV 2023 paper [EMDB: The Electromagnetic Database
 
 ## [Project Page](https://ait.ethz.ch/emdb) | [Paper](https://files.ait.ethz.ch/projects/emdb/main.pdf) | [Supplementary](https://files.ait.ethz.ch/projects/emdb/supp.pdf) | [Video](https://youtu.be/H66-YE4GUHI?feature=shared) | [Data](https://emdb.ait.ethz.ch)
 
+![Artificial Cropping Process](path/to/your_gif.gif)
+
 <img src="https://files.ait.ethz.ch/projects/emdb/assets/teaser.jpg"/> 
 
 ## Dataset
